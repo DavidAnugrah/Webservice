@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="id.my.berkah.webservice.dao.WSMapper" >
+    
+    <select id="insertCustomer" parameterType="map" statementType="CALLABLE">
+       { CALL dpa.ClientInsertCustomer
+            (
+                 #{trcId,           mode=IN,   jdbcType=VARCHAR},
+                 #{firstName,       mode=IN,   jdbcType=VARCHAR},
+                 #{lastName,        mode=IN,   jdbcType=VARCHAR},
+                 #{gender,          mode=IN,   jdbcType=VARCHAR},
+                 #{birthPlace,      mode=IN,   jdbcType=VARCHAR},
+                 #{birthDate,       mode=IN,   jdbcType=VARCHAR},
+                 #{religion,        mode=IN,   jdbcType=VARCHAR},
+                 #{phone,           mode=IN,   jdbcType=VARCHAR},
+                 #{address,         mode=IN,   jdbcType=VARCHAR},
+                 #{mailAddress,     mode=IN,   jdbcType=VARCHAR},
+                 #{country,         mode=IN,   jdbcType=VARCHAR},
+                 #{province,        mode=IN,   jdbcType=VARCHAR},
+                 #{city,            mode=IN,   jdbcType=VARCHAR},
+                 #{kodepos,         mode=IN,   jdbcType=VARCHAR},
+                 #{typeId,          mode=IN,   jdbcType=VARCHAR},
+                 #{numberId,        mode=IN,   jdbcType=VARCHAR},
+                 #{expiredDate,     mode=IN,   jdbcType=VARCHAR},
+                 #{deliverType,     mode=IN,   jdbcType=VARCHAR},
+                 #{deliverAddress,  mode=IN,   jdbcType=VARCHAR},
+                 #{outError,        mode=OUT,  jdbcType=INTEGER},
+                 #{outMessage,      mode=OUT,  jdbcType=VARCHAR}
+                )
+       }
+    </select>        
+
+    <resultMap id="resultCountMSISDN" type="int">
+       <result column="RecCount"  property="RecCount"  jdbcType="NUMERIC" />
+    </resultMap>
+
+    <select id="GetCountMSISDN" parameterType="map" resultMap="resultCountMSISDN">    
+        Select COUNT(1) RecCount
+        from table ( dpa.ClientListMsisdn
+                        (
+                            #{clientId},
+                            #{packageId},
+                            #{cityId},
+                            #{msisdn}
+                        )
+                    )
+                                
+    </select>  
+    
+    <resultMap id="resultMSISDN" type="id.my.berkah.webservice.model.ListMSISDN">
+        <result column="PACKET_NAME"            property="packageName"              jdbcType="VARCHAR" />
+        <result column="MSISDN"                 property="msisdn"                   jdbcType="VARCHAR" />
+        <result column="CITY_DESCRIPTION"       property="cityDescription"          jdbcType="VARCHAR" />
+        <result column="PACKET_VALUE"           property="packageValue"             jdbcType="VARCHAR" />
+        <result column="PACKET_ID"              property="packageId"                jdbcType="NUMERIC" />
+    </resultMap>
+
+    <select id="GetListMSISDN" parameterType="map" resultMap="resultMSISDN">
+        select PACKET_NAME, MSISDN, CITY_DESCRIPTION, PACKET_VALUE, PACKET_ID 
+        From (
+                select PACKET_NAME, MSISDN, CITY_DESCRIPTION, PACKET_VALUE, PACKET_ID, ROWNUM RECID
+                from table ( dpa.ClientListMsisdn
+                                (
+                                    #{clientId},
+                                    #{packageId},
+                                    #{cityId},
+                                    #{msisdn}
+                                )
+                           )
+                WHERE rownum &lt;= (#{pageNumber} * #{pageSize})
+             )
+       WHERE  RECID &gt;  ((#{pageNumber} - 1) * #{pageSize})
+   </select>  
+     
+   <select id="updateCustomer" parameterType="map" statementType="CALLABLE">
+        { CALL dpa.ClientUpdateCustomer
+            (
+                #{trcId,         mode=IN,   jdbcType=VARCHAR},
+                #{packageId,     mode=IN,   jdbcType=VARCHAR},
+                #{msisdn,        mode=IN,   jdbcType=VARCHAR},
+                #{reserveNo,     mode=OUT,  jdbcType=VARCHAR},
+                #{outError,      mode=OUT,  jdbcType=INTEGER},
+                #{outMessage,    mode=OUT,  jdbcType=VARCHAR}
+            )
+       }
+   </select>    
+   <select id="updatePayment" parameterType="map" statementType="CALLABLE">
+        { CALL  dpa.ClientUpdatePayment
+            (
+                #{reserveNo,        mode=IN,   jdbcType=VARCHAR},
+                #{paymentCode,      mode=IN,   jdbcType=VARCHAR},
+                #{outError,         mode=OUT,  jdbcType=INTEGER},
+                #{outMessage,       mode=OUT,  jdbcType=VARCHAR}
+            )
+        }
+   </select>  
+
+  <resultMap id="resultPackage" type="id.my.berkah.webservice.model.ListPackage">
+    <result column="PACKET_ID"              property="packageId"                jdbcType="NUMERIC" />
+    <result column="PACKET_CODE"            property="packageCode"              jdbcType="VARCHAR" />
+    <result column="PACKET_NAME"            property="packageName"              jdbcType="VARCHAR" />
+    <result column="PACKET_DESCRIPTION"     property="packageDescription"       jdbcType="VARCHAR" />
+    <result column="PACKET_VALUE"           property="packageValue"             jdbcType="VARCHAR" />
+  </resultMap>
+
+  <select id="GetListPackage" parameterType="String" resultMap="resultPackage">
+	select PACKET_ID, PACKET_CODE, PACKET_NAME, PACKET_DESCRIPTION, PACKET_VALUE from table(dpa.ClientListPacket(#{code}))
+  </select>
+      
+  <resultMap id="resultCity" type="id.my.berkah.webservice.model.ListCity">
+    <result column="CITY_ID"            property="cityId"         jdbcType="NUMERIC" />
+    <result column="CITY_CODE_DISP"     property="cityCode"       jdbcType="VARCHAR" />
+    <result column="CITY_NAME"          property="cityName"       jdbcType="VARCHAR" />
+  </resultMap>
+
+  <select id="GetListCity" parameterType="String" resultMap="resultCity">
+	select CITY_ID, CITY_CODE_DISP, CITY_NAME from table(dpa.ClientListcity(#{code}))
+  </select>
+
+   <select id="goCheckUserAPI" parameterType="map" statementType="CALLABLE">
+        { CALL  dpa.ClientCekUserApi
+            (
+                #{userApi,       mode=IN,    jdbcType=VARCHAR},
+                #{password,      mode=IN,    jdbcType=VARCHAR},
+                #{outError,      mode=OUT,   jdbcType=INTEGER},
+                #{outMessage,    mode=OUT,   jdbcType=VARCHAR}
+            )
+        }
+   </select>  
+   <select id="goCheckIPWhiteList" parameterType="map" statementType="CALLABLE">
+        { CALL  dpa.ClientCekIP
+            (
+                #{ip,            mode=IN,    jdbcType=VARCHAR},
+                #{outError,      mode=OUT,   jdbcType=INTEGER},
+                #{outMessage,    mode=OUT,   jdbcType=VARCHAR}
+            )
+        } 
+   </select>
+   <select id="ClientAttribute" parameterType="map" statementType="CALLABLE">
+        { CALL dpa.ClientAttribute
+            (
+                #{reserveNo,     mode=IN,    jdbcType=VARCHAR},
+                #{attrCode,      mode=IN,    jdbcType=VARCHAR},
+                #{attrValue,     mode=IN,    jdbcType=VARCHAR},
+                #{outError,      mode=OUT,   jdbcType=INTEGER},
+                #{outMessage,    mode=OUT,   jdbcType=VARCHAR}
+            )
+        }
+   </select>
+   
+   <select id="ClientInsertTrcId" parameterType="map" statementType="CALLABLE">
+        { CALL dpa.ClientInsertTrcId
+            (
+                #{clientId,             mode=IN,        jdbcType=VARCHAR},
+                #{trcId,                mode=OUT,       jdbcType=VARCHAR},
+                #{outError,             mode=OUT,       jdbcType=INTEGER},
+                #{outMessage,           mode=OUT,       jdbcType=VARCHAR}
+            )
+        }
+   </select>
+
+   <select id="ClientGetDataPersoATM" parameterType="map" statementType="CALLABLE">
+        {CALL dpa.ClientGetDataPersoATM
+            (
+                #{buId,                 mode=IN,        jdbcType=VARCHAR},
+                #{msisdn,               mode=IN,        jdbcType=VARCHAR},
+                #{serialNo,             mode=IN,        jdbcType=VARCHAR},
+                #{reserveNo,            mode=IN,        jdbcType=VARCHAR},
+                #{userId,               mode=IN,        jdbcType=VARCHAR},
+                #{persoId,              mode=OUT,       jdbcType=VARCHAR},
+                #{reserveId,            mode=OUT,       jdbcType=VARCHAR},
+                #{imsi,                 mode=OUT,       jdbcType=VARCHAR},
+                #{iccid,                mode=OUT,       jdbcType=VARCHAR},
+                #{pin1,                 mode=OUT,       jdbcType=VARCHAR},
+                #{pin2,                 mode=OUT,       jdbcType=VARCHAR},
+                #{puk1,                 mode=OUT,       jdbcType=VARCHAR},
+                #{puk2,                 mode=OUT,       jdbcType=VARCHAR},
+                #{aki,                  mode=OUT,       jdbcType=VARCHAR},
+                #{smpp,                 mode=OUT,       jdbcType=VARCHAR},
+                #{simType,              mode=OUT,       jdbcType=VARCHAR},
+                #{dllName,              mode=OUT,       jdbcType=VARCHAR},
+                #{profile,              mode=OUT,       jdbcType=VARCHAR},
+                #{authKey,              mode=OUT,       jdbcType=VARCHAR},
+                #{version,              mode=OUT,       jdbcType=VARCHAR},
+                #{subscriberType,       mode=OUT,       jdbcType=VARCHAR},
+                #{status,               mode=OUT,       jdbcType=VARCHAR},
+                #{outError,             mode=OUT,       jdbcType=INTEGER},
+                #{outMessage,           mode=OUT,       jdbcType=VARCHAR}
+            )
+        }
+   </select>
+   
+   <select id="PersoUpdateStatus" parameterType="map" statementType="CALLABLE">
+        {CALL MyRps.PersoUpdateStatus
+            (
+                #{module,       mode=IN,    jdbcType=VARCHAR},
+                #{persoId,      mode=IN,    jdbcType=VARCHAR},
+                #{status,       mode=IN,    jdbcType=VARCHAR},
+                #{userId,       mode=IN,    jdbcType=VARCHAR},
+                #{isAutoProv,   mode=OUT,   jdbcType=INTEGER},
+                #{persoType,    mode=OUT,   jdbcType=VARCHAR},
+                #{simType,      mode=OUT,   jdbcType=VARCHAR},
+                #{outError,     mode=OUT,   jdbcType=INTEGER},
+                #{outMessage,   mode=OUT,   jdbcType=VARCHAR}
+            )
+        }
+   </select>
+
+    <select id="goOPKeyAndTKey" parameterType="map" statementType="CALLABLE">
+        { CALL commonweb.GetKeys
+            (
+                #{tKey,          mode=OUT,   jdbcType=VARCHAR},
+                #{opKey,         mode=OUT,   jdbcType=VARCHAR},
+                #{outError,      mode=OUT,   jdbcType=INTEGER},
+                #{outMessage,    mode=OUT,   jdbcType=VARCHAR}
+            )
+        }
+   </select>  
+   
+    <select id="goAutoPOSbyATM" parameterType="map" statementType="CALLABLE">
+        { CALL dpa.ClientAutoPOSATM
+            (
+              #{userId,               mode=IN,    jdbcType=VARCHAR},
+              #{responsibilityId,     mode=IN,    jdbcType=VARCHAR},
+              #{reserveNo,            mode=IN,    jdbcType=VARCHAR},
+              #{serialNo,             mode=IN,    jdbcType=VARCHAR},
+              #{outError,             mode=OUT,   jdbcType=INTEGER},
+              #{outMessage,           mode=OUT,   jdbcType=VARCHAR}
+            )
+        }
+   </select>  
+   
+   
+    <select id="goSendSMS" parameterType="map" statementType="CALLABLE">
+        { CALL dpa.SendSMS
+            (
+        #{NAME,                 mode=IN,    jdbcType=VARCHAR},
+        #{ADDRESS,              mode=IN,    jdbcType=VARCHAR},
+        #{CITY,                 mode=IN,    jdbcType=VARCHAR},
+        #{BITRHDATE,            mode=IN,    jdbcType=VARCHAR},
+        #{BIRTHPLACE,           mode=IN,    jdbcType=VARCHAR},
+        #{MSISDNFROM,           mode=IN,    jdbcType=VARCHAR},
+        #{MSISDNCUST,           mode=IN,    jdbcType=VARCHAR},
+        #{IDTYPE,               mode=IN,    jdbcType=VARCHAR},
+        #{IDNO,                 mode=IN,    jdbcType=VARCHAR},
+        #{OUTLET,               mode=IN,    jdbcType=VARCHAR},
+        #{outError,             mode=OUT,   jdbcType=INTEGER},
+        #{outMessage,           mode=OUT,   jdbcType=VARCHAR}
+        )
+        }
+   </select>  
+
+</mapper>
